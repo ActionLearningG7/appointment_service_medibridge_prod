@@ -1,24 +1,140 @@
 spring:
   application:
     name: appointment-service
-  profiles:
-    active: ${SPRING_PROFILE:dev}
+  
+  # MySQL Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/medibridge_appointments?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: Prakash@1
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Redis Configuration
+  data:
+    redis:
+      url: ${REDIS_URL:redis://default:GOwUPRpFGRVtZMSiEEWlTapCvefmpsFj@hopper.proxy.rlwy.net:11415}
 
+  
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:shortline.proxy.rlwy.net:57987}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: ${spring.application.name}-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+
+# Server Configuration
 server:
-  port: 8082
+  port: 8083
+  servlet:
+    context-path: /api/v1
 
+# CORS Configuration: REMOVED
+# API Gateway handles ALL CORS centrally
+# This service trusts the gateway and uses allowedOriginPatterns("*") in WebSocketConfig
+
+# Eureka Client
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
 
+# Actuator & Metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,metrics,prometheus,info
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Application-Specific Configuration
+appointment:
+  queue:
+    default-avg-consultation-minutes: 15
+    max-patients-per-queue: 100
+    no-show-grace-period-minutes: 3
+    token-allocation-lock-timeout-seconds: 5
+  
+  video:
+    default-provider: STUB
+    session-token-validity-minutes: 60
+  
+  redis:
+    queue-cache-ttl-hours: 24
+    idempotency-ttl-hours: 24
+  
+  kafka:
+    topics:
+      appointments: medibridge.appointments.events
+      queue: medibridge.queue.events
+      video: medibridge.video.events
+      user: medibridge.user.events
+    outbox-publisher-interval-ms: 5000
+
+# JWT Configuration
+jwt:
+  secret: MediBridge2026!Pr0duct1on$ecretK3y#H0sp1talManag3m3ntSyst3m@Secur1ty
+  expiration: 3600000
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.medibridge.appointment_service_medibridge: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.data.redis: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

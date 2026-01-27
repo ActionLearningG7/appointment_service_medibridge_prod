@@ -1,17 +1,45 @@
 spring:
+  # Database Configuration (Dev)
   datasource:
-    url: jdbc:mysql://localhost:3306/medibridge_appointment_dev?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: Prakash@1
+    url: ${DB_URL:jdbc:mysql://localhost:3306/medibridge_appointment_dev?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:Prakash@1}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # JPA Configuration (Dev)
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+  
+  # Redis Configuration (Dev - Local)
+  data:
+    redis:
+      url: ${REDIS_URL:redis://default:GOwUPRpFGRVtZMSiEEWlTapCvefmpsFj@hopper.proxy.rlwy.net:11415}
+
+  
+  # Kafka Configuration (Dev - Local)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:shortline.proxy.rlwy.net:57987}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: ${spring.application.name}-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+
+  # Mail Configuration (Dev)
   mail:
     host: smtp.gmail.com
     port: 587
@@ -25,12 +53,15 @@ spring:
             enable: true
             required: true
 
+# Management (Dev)
 management:
   health:
     mail:
       enabled: false
 
+# Logging (Dev)
 logging:
   level:
     root: INFO
     com.medibridge: DEBUG
+    org.springframework.data.redis: DEBUG
