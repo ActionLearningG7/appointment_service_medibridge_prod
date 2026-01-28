@@ -1,9 +1,9 @@
 spring:
   # Database Configuration (Production)
   datasource:
-    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${MYSQLUSER}
-    password: ${MYSQLPASSWORD}
+    url: jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: diFcUjHloMRrPoCGoCbkDpeevwIVtJjQ
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA Configuration (Production)
