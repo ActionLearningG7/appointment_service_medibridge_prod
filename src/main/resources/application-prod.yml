@@ -1,36 +1,36 @@
 spring:
   # Database Configuration (Production)
   datasource:
-    url: ${DB_URL}  # Must be provided via environment
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   # JPA Configuration (Production)
   jpa:
     hibernate:
-      ddl-auto: validate  # NEVER use 'update' in production
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
-  
+
   # Redis Configuration (Production)
   data:
     redis:
-      url: ${REDIS_URL:redis://default:GOwUPRpFGRVtZMSiEEWlTapCvefmpsFj@hopper.proxy.rlwy.net:11415}
+      url: redis://default:GOwUPRpFGRVtZMSiEEWlTapCvefmpsFj@hopper.proxy.rlwy.net:11415
 
   # Kafka Configuration (Production)
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:shortline.proxy.rlwy.net:57987}
+    bootstrap-servers: shortline.proxy.rlwy.net:57987
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
     consumer:
-      group-id: ${spring.application.name}-group
+      group-id: appointment-service-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest

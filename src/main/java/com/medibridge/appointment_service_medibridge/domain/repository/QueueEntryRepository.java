@@ -48,4 +48,9 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, UUID> {
         // Find stale entries (waiting or called but from previous days)
         @Query("SELECT qe FROM QueueEntry qe WHERE qe.status IN ('WAITING', 'CALLED') AND qe.joinedAt < :cutoff")
         List<QueueEntry> findStaleEntries(@Param("cutoff") java.time.LocalDateTime cutoff);
+
+        // Statistics counts
+        int countByQueueIdAndStatus(UUID queueId, QueueEntryStatus status);
+
+        int countByQueueId(UUID queueId);
 }

@@ -102,4 +102,18 @@ public class Appointment extends BaseEntity {
     @Convert(converter = UUIDConverter.class)
     @Column(name = "cancelled_by", columnDefinition = "BINARY(16)")
     private UUID cancelledBy;
+
+    /**
+     * Doctor name (cached for queue monitoring)
+     * Denormalized for performance
+     */
+    @Column(name = "doctor_name", length = 255)
+    private String doctorName;
+
+    /**
+     * Doctor specialization (cached for queue monitoring)
+     * Denormalized for performance
+     */
+    @Column(name = "doctor_specialization", length = 100)
+    private String doctorSpecialization;
 }

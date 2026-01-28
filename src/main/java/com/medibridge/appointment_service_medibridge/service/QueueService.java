@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ public class QueueService {
     private final DomainEventProducer domainEventProducer;
     private final AuditService auditService;
     private final DistributedLockService distributedLockService;
+    private final WebSocketQueueService webSocketQueueService;
 
     @Value("${appointment.queue.default-avg-consultation-minutes:15}")
     private int defaultAvgConsultationMinutes;
@@ -75,6 +77,9 @@ public class QueueService {
             // Publish Event
             publishQueueEvent(savedQueue, "QueueOpened");
 
+            // Broadcast WebSocket update
+            webSocketQueueService.broadcastQueueStatusChange(savedQueue.getId());
+
             return savedQueue;
         });
     }
@@ -100,6 +105,9 @@ public class QueueService {
         redisQueueCacheService.cacheQueueStatus(queue.getDoctorId(), queue.getQueueDate(), QueueStatus.PAUSED);
         auditService.logAction(ActionType.QUEUE_PAUSED, "QUEUE", queueId, "Queue paused", null);
         publishQueueEvent(queue, "QueuePaused");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueStatusChange(queueId);
     }
 
     /**
@@ -114,6 +122,9 @@ public class QueueService {
         redisQueueCacheService.cacheQueueStatus(queue.getDoctorId(), queue.getQueueDate(), QueueStatus.OPEN);
         auditService.logAction(ActionType.QUEUE_OPENED, "QUEUE", queueId, "Queue resumed", null);
         publishQueueEvent(queue, "QueueResumed");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueStatusChange(queueId);
     }
 
     /**
@@ -130,11 +141,32 @@ public class QueueService {
         redisQueueCacheService.cacheQueueStatus(queue.getDoctorId(), queue.getQueueDate(), QueueStatus.CLOSED);
         auditService.logAction(ActionType.QUEUE_CLOSED, "QUEUE", queueId, "Queue closed", null);
         publishQueueEvent(queue, "QueueClosed");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueStatusChange(queueId);
     }
 
     public VirtualQueue getQueue(UUID queueId) {
         return virtualQueueRepository.findById(queueId)
                 .orElseThrow(() -> new RuntimeException("Queue not found: " + queueId));
+    }
+
+    /**
+     * Get all active queues for today (for admin monitoring)
+     */
+    @Transactional(readOnly = true)
+    public List<VirtualQueue> getAllActiveQueuesForToday() {
+        return virtualQueueRepository.findActiveQueuesForToday();
+    }
+
+    /**
+     * Get all queues for a specific date (for admin monitoring)
+     */
+    @Transactional(readOnly = true)
+    public List<VirtualQueue> getAllQueuesForDate(LocalDate date) {
+        return virtualQueueRepository.findAll().stream()
+                .filter(q -> q.getQueueDate().equals(date))
+                .toList();
     }
 
     private void publishQueueEvent(VirtualQueue queue, String eventType) {

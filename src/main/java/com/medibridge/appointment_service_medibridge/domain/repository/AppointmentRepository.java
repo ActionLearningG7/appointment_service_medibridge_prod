@@ -47,4 +47,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
 
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentDate = :date AND a.status = 'COMPLETED'")
     long countCompletedAppointments(@Param("doctorId") UUID doctorId, @Param("date") LocalDate date);
+
+    // Queue Monitoring (Admin)
+    Optional<Appointment> findByDoctorIdAndAppointmentDate(UUID doctorId, LocalDate date);
 }

@@ -31,6 +31,7 @@ public class QueueEntryService {
     private final IdempotencyService idempotencyService;
     private final AuditService auditService;
     private final DomainEventProducer domainEventProducer;
+    private final WebSocketQueueService webSocketQueueService;
 
     @Value("${appointment.kafka.topics.queue}")
     private String queueTopic;
@@ -102,6 +103,9 @@ public class QueueEntryService {
 
                 // Publish Event
                 publishEvent(saved, "QueueJoined");
+
+                // Broadcast WebSocket update
+                webSocketQueueService.broadcastQueueEntryUpdate(queue.getId());
 
                 return saved;
 
@@ -235,6 +239,9 @@ public class QueueEntryService {
 
         // Event
         publishEvent(entry, "QueueEntryCompleted");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueEntryUpdate(entry.getQueueId());
     }
 
     /**
