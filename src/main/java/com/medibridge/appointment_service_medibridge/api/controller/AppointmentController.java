@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,12 +32,11 @@ public class AppointmentController {
     @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<AppointmentResponse> createAppointment(@Valid @RequestBody CreateAppointmentRequest request) {
         UUID patientId = SecurityUtils.getCurrentUserId();
-        var appointment = appointmentService.createAppointment(
+        return ResponseEntity.ok(appointmentService.createAppointment(
                 patientId,
                 request.getDoctorId(),
                 request.getDate(),
-                request.getReason());
-        return ResponseEntity.ok(mapper.toAppointmentResponse(appointment));
+                request.getReason()));
     }
 
     @GetMapping("/me")
@@ -44,6 +44,17 @@ public class AppointmentController {
     public ResponseEntity<List<AppointmentResponse>> getMyAppointments() {
         UUID patientId = SecurityUtils.getCurrentUserId();
         var appointments = appointmentService.getAppointmentsForPatient(patientId);
+        return ResponseEntity.ok(mapper.toAppointmentResponses(appointments));
+    }
+
+    @GetMapping("/doctor")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<List<AppointmentResponse>> getDoctorAppointments(
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String status) {
+        UUID doctorId = SecurityUtils.getCurrentUserId();
+        LocalDate localDate = (date != null) ? LocalDate.parse(date) : null;
+        var appointments = appointmentService.getAppointmentsForDoctor(doctorId, localDate, status);
         return ResponseEntity.ok(mapper.toAppointmentResponses(appointments));
     }
 

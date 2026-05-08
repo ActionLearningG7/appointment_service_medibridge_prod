@@ -14,4 +14,7 @@ public class AppointmentResponse {
     private LocalDate appointmentDate;
     private AppointmentStatus status;
     private String reasonForVisit;
+    private boolean paymentRequired;
+    private String invoiceId;
+    private String checkoutUrl;
 }

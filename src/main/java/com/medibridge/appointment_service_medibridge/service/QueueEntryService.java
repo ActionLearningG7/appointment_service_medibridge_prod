@@ -192,10 +192,8 @@ public class QueueEntryService {
         entry.setStatus(QueueEntryStatus.CANCELLED);
         queueEntryRepository.save(entry);
 
-        // Update Appointment (Revert to CONFIRMED or similar, here we just unset
-        // QUEUED)
-        // Assuming CONFIRMED is the state before QUEUED
-        appointmentService.updateStatus(entry.getAppointmentId(), AppointmentStatus.REQUESTED);
+        // Update Appointment (Revert to CONFIRMED so they can join again if they want)
+        appointmentService.updateStatus(entry.getAppointmentId(), AppointmentStatus.CONFIRMED);
 
         // Remove from Redis
         redisQueueCacheService.removePatientFromWaitingList(entry.getQueueId(), entry.getId());
@@ -206,6 +204,58 @@ public class QueueEntryService {
 
         // Event
         publishEvent(entry, "QueueLeft");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueEntryUpdate(entry.getQueueId());
+    }
+
+    /**
+     * Mark patient as No-Show
+     */
+    @Transactional
+    public void markAsNoShow(UUID queueEntryId) {
+        QueueEntry entry = queueEntryRepository.findById(queueEntryId)
+                .orElseThrow(() -> new IllegalArgumentException("Queue entry not found"));
+
+        entry.setStatus(QueueEntryStatus.NO_SHOW);
+        queueEntryRepository.save(entry);
+
+        // Update Appointment
+        appointmentService.updateStatus(entry.getAppointmentId(), AppointmentStatus.NO_SHOW);
+
+        // Remove from Redis
+        redisQueueCacheService.removePatientFromWaitingList(entry.getQueueId(), entry.getId());
+
+        auditService.logAction(ActionType.NO_SHOW_MARKED, "QUEUE_ENTRY", entry.getId(),
+                "Patient marked as no-show", null);
+
+        publishEvent(entry, "PatientNoShow");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueEntryUpdate(entry.getQueueId());
+    }
+
+    /**
+     * Skip patient (Move to skipped status)
+     */
+    @Transactional
+    public void skipPatient(UUID queueEntryId) {
+        QueueEntry entry = queueEntryRepository.findById(queueEntryId)
+                .orElseThrow(() -> new IllegalArgumentException("Queue entry not found"));
+
+        entry.setStatus(QueueEntryStatus.SKIPPED);
+        queueEntryRepository.save(entry);
+
+        // Update Appointment (back to CONFIRMED so they can join again)
+        appointmentService.updateStatus(entry.getAppointmentId(), AppointmentStatus.CONFIRMED);
+
+        auditService.logAction(ActionType.PATIENT_SKIPPED, "QUEUE_ENTRY", entry.getId(),
+                "Patient skipped by doctor", null);
+
+        publishEvent(entry, "PatientSkipped");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueEntryUpdate(entry.getQueueId());
     }
 
     /**
@@ -227,7 +277,7 @@ public class QueueEntryService {
         }
 
         entry.setStatus(QueueEntryStatus.COMPLETED);
-        entry.setEndedAt(LocalDateTime.now()); // Ensure this field exists in entity, otherwise skip
+        entry.setEndedAt(LocalDateTime.now());
         queueEntryRepository.save(entry);
 
         // Update Appointment Status

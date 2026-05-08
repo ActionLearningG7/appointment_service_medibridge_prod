@@ -15,6 +15,16 @@ public enum AppointmentStatus {
     REQUESTED,
 
     /**
+     * Payment is pending for the appointment
+     */
+    PAYMENT_PENDING,
+
+    /**
+     * Appointment is confirmed after payment
+     */
+    CONFIRMED,
+
+    /**
      * Patient has joined the queue
      */
     QUEUED,

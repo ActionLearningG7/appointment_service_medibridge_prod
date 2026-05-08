@@ -62,40 +62,39 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
 
                 // Authorization rules
-//                .authorizeHttpRequests(auth -> auth
-//                        // ============================================
-//                        // WEBSOCKET ENDPOINTS (SockJS + STOMP)
-//                        // ============================================
-//                        // All WebSocket requests bypass HTTP security
-//                        // STOMP CONNECT is authenticated by WebSocketAuthInterceptor
-//                        // SockJS handshake (/ws/info, /ws/xhr, etc) requires no HTTP auth
-//                        .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()      // SockJS info handshake
-//                        .requestMatchers(HttpMethod.POST, "/ws/**").permitAll()     // SockJS transports (XHR, iframe)
-//                        .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()  // CORS preflight
-//
-//                        // ============================================
-//                        // CORS PREFLIGHT (OPTIONS)
-//                        // ============================================
-//                        // Allow CORS preflight for all paths
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//
-//                        // ============================================
-//                        // HEALTH & ACTUATOR
-//                        // ============================================
-//                        // Allow health checks
-//                        .requestMatchers("/actuator/**").permitAll()
-//                        .requestMatchers("/health").permitAll()
-//                        .requestMatchers("/info").permitAll()
-//
-//                        // ============================================
-//                        // ALL OTHER ENDPOINTS - REQUIRE AUTHENTICATION
-//                        // ============================================
-//                        // Everything else requires JWT authentication
-//                        .anyRequest().authenticated())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll());
+                        // ============================================
+                        // WEBSOCKET ENDPOINTS (SockJS + STOMP)
+                        // ============================================
+                        // All WebSocket requests bypass HTTP security
+                        // STOMP CONNECT is authenticated by WebSocketAuthInterceptor
+                        // SockJS handshake (/ws/info, /ws/xhr, etc) requires no HTTP auth
+                        .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()      // SockJS info handshake
+                        .requestMatchers(HttpMethod.POST, "/ws/**").permitAll()     // SockJS transports (XHR, iframe)
+                        .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()  // CORS preflight
+
+                        // ============================================
+                        // CORS PREFLIGHT (OPTIONS)
+                        // ============================================
+                        // Allow CORS preflight for all paths
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ============================================
+                        // HEALTH & ACTUATOR
+                        // ============================================
+                        // Allow health checks
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/info").permitAll()
+
+                        // ============================================
+                        // ALL OTHER ENDPOINTS - REQUIRE AUTHENTICATION
+                        // ============================================
+                        // Everything else requires JWT authentication
+                        .anyRequest().authenticated())
+
                 // Add JWT filter
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -109,7 +108,7 @@ public class SecurityConfig {
 //        CorsConfiguration configuration = new CorsConfiguration();
 //
 //        // Allow frontend origin
-//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3001"));
+//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","https://medibridge-prod.vercel.app/", "http://localhost:3001"));
 //
 //        // Allow common methods
 //        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

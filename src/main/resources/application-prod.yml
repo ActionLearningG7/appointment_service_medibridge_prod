@@ -44,3 +44,13 @@ logging:
     root: WARN
     com.medibridge: INFO
     org.springframework.data.redis: WARN
+eureka:
+  client:
+    service-url:
+      defaultZone: https://servermedibridgeprod-production.up.railway.app/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90

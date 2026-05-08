@@ -1,5 +1,6 @@
 package com.medibridge.appointment_service_medibridge.api.controller;
 
+import com.medibridge.appointment_service_medibridge.api.dto.request.QueueSettingsRequest;
 import com.medibridge.appointment_service_medibridge.api.dto.response.QueueEntryResponse;
 import com.medibridge.appointment_service_medibridge.api.dto.response.QueueResponse;
 import com.medibridge.appointment_service_medibridge.api.mapper.AppMapper;
@@ -32,6 +33,36 @@ public class DoctorController {
         return ResponseEntity.ok(mapper.toQueueResponse(queue));
     }
 
+    @PostMapping("/queues/{queueId}/pause")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> pauseQueue(@PathVariable UUID queueId) {
+        queueService.pauseQueue(queueId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/queues/{queueId}/resume")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> resumeQueue(@PathVariable UUID queueId) {
+        queueService.resumeQueue(queueId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/queues/{queueId}/close")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> closeQueue(@PathVariable UUID queueId) {
+        UUID doctorId = SecurityUtils.getCurrentUserId();
+        queueService.closeQueue(queueId, doctorId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/queues/{queueId}/settings")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<QueueResponse> updateSettings(@PathVariable UUID queueId,
+            @RequestBody QueueSettingsRequest request) {
+        var queue = queueService.updateQueueSettings(queueId, request.getAvgConsultationMinutes());
+        return ResponseEntity.ok(mapper.toQueueResponse(queue));
+    }
+
     @GetMapping("/queues/today")
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<QueueResponse> getTodayQueue() {
@@ -55,5 +86,26 @@ public class DoctorController {
         // For MVP, we rely on @PreAuthorize("hasRole('DOCTOR')")
         var entry = queueEntryService.callNextPatient(queueId);
         return ResponseEntity.ok(mapper.toQueueEntryResponse(entry));
+    }
+
+    @PostMapping("/queues/entries/{entryId}/complete")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> completeEntry(@PathVariable UUID entryId) {
+        queueEntryService.completeQueueEntry(entryId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/queues/entries/{entryId}/no-show")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> markNoShow(@PathVariable UUID entryId) {
+        queueEntryService.markAsNoShow(entryId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/queues/entries/{entryId}/skip")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Void> skipPatient(@PathVariable UUID entryId) {
+        queueEntryService.skipPatient(entryId);
+        return ResponseEntity.ok().build();
     }
 }

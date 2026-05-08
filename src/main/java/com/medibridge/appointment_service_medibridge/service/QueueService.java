@@ -146,6 +146,26 @@ public class QueueService {
         webSocketQueueService.broadcastQueueStatusChange(queueId);
     }
 
+    /**
+     * Update Queue Settings
+     */
+    @Transactional
+    public VirtualQueue updateQueueSettings(UUID queueId, int avgConsultationMinutes) {
+        VirtualQueue queue = getQueue(queueId);
+        queue.setAvgConsultationMinutes(avgConsultationMinutes);
+        VirtualQueue saved = virtualQueueRepository.save(queue);
+
+        auditService.logAction(ActionType.QUEUE_SETTINGS_UPDATED, "QUEUE", queueId,
+                "Average consultation time updated to " + avgConsultationMinutes, null);
+
+        publishQueueEvent(saved, "QueueSettingsUpdated");
+
+        // Broadcast WebSocket update
+        webSocketQueueService.broadcastQueueStatusChange(queueId);
+
+        return saved;
+    }
+
     public VirtualQueue getQueue(UUID queueId) {
         return virtualQueueRepository.findById(queueId)
                 .orElseThrow(() -> new RuntimeException("Queue not found: " + queueId));

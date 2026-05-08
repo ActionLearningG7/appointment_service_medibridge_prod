@@ -39,6 +39,11 @@ public class VideoSessionResponse {
     private UUID consultationId;
 
     /**
+     * Appointment ID
+     */
+    private UUID appointmentId;
+
+    /**
      * Session Status
      */
     private SessionStatus status;

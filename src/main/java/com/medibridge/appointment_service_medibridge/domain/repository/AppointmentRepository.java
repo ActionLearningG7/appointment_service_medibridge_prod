@@ -17,37 +17,39 @@ import java.util.UUID;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
 
-    // Patient Queries
-    Page<Appointment> findByPatientId(UUID patientId, Pageable pageable);
+        // Patient Queries
+        Page<Appointment> findByPatientId(UUID patientId, Pageable pageable);
 
-    Page<Appointment> findByPatientIdAndStatus(UUID patientId, AppointmentStatus status, Pageable pageable);
+        Page<Appointment> findByPatientIdAndStatus(UUID patientId, AppointmentStatus status, Pageable pageable);
 
-    List<Appointment> findByPatientIdOrderByCreatedAtDesc(UUID patientId);
+        List<Appointment> findByPatientIdOrderByCreatedAtDesc(UUID patientId);
 
-    // Doctor Queries
-    Page<Appointment> findByDoctorId(UUID doctorId, Pageable pageable);
+        // Doctor Queries
+        Page<Appointment> findByDoctorId(UUID doctorId, Pageable pageable);
 
-    Page<Appointment> findByDoctorIdAndAppointmentDate(UUID doctorId, LocalDate date, Pageable pageable);
+        List<Appointment> findByDoctorIdOrderByAppointmentDateDesc(UUID doctorId);
 
-    @Query("SELECT a FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentDate = :date AND a.status IN :statuses")
-    List<Appointment> findDoctorAppointmentsForDay(
-            @Param("doctorId") UUID doctorId,
-            @Param("date") LocalDate date,
-            @Param("statuses") List<AppointmentStatus> statuses);
+        Page<Appointment> findByDoctorIdAndAppointmentDate(UUID doctorId, LocalDate date, Pageable pageable);
 
-    // Status Checks
-    boolean existsByPatientIdAndDoctorIdAndAppointmentDateAndStatusIn(
-            UUID patientId,
-            UUID doctorId,
-            LocalDate date,
-            List<AppointmentStatus> statuses);
+        @Query("SELECT a FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentDate = :date AND a.status IN :statuses")
+        List<Appointment> findDoctorAppointmentsForDay(
+                        @Param("doctorId") UUID doctorId,
+                        @Param("date") LocalDate date,
+                        @Param("statuses") List<AppointmentStatus> statuses);
 
-    // Organization Queries (Admin)
-    Page<Appointment> findByOrganizationId(UUID organizationId, Pageable pageable);
+        // Status Checks
+        boolean existsByPatientIdAndDoctorIdAndAppointmentDateAndStatusIn(
+                        UUID patientId,
+                        UUID doctorId,
+                        LocalDate date,
+                        List<AppointmentStatus> statuses);
 
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentDate = :date AND a.status = 'COMPLETED'")
-    long countCompletedAppointments(@Param("doctorId") UUID doctorId, @Param("date") LocalDate date);
+        // Organization Queries (Admin)
+        Page<Appointment> findByOrganizationId(UUID organizationId, Pageable pageable);
 
-    // Queue Monitoring (Admin)
-    Optional<Appointment> findByDoctorIdAndAppointmentDate(UUID doctorId, LocalDate date);
+        @Query("SELECT COUNT(a) FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentDate = :date AND a.status = 'COMPLETED'")
+        long countCompletedAppointments(@Param("doctorId") UUID doctorId, @Param("date") LocalDate date);
+
+        // Queue Monitoring (Admin)
+        Optional<Appointment> findByDoctorIdAndAppointmentDate(UUID doctorId, LocalDate date);
 }

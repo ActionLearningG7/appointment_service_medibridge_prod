@@ -38,6 +38,7 @@ public class VideoConsultationService {
     private final ConsultationParticipantPresenceRepository presenceRepository;
     private final QueueEntryRepository queueEntryRepository;
     private final QueueEntryService queueEntryService;
+    private final AppointmentService appointmentService;
 
     private static final int SESSION_TOKEN_VALIDITY_MINUTES = 30;
     private static final int SESSION_INACTIVITY_TIMEOUT_MINUTES = 10;
@@ -92,6 +93,9 @@ public class VideoConsultationService {
                 .build();
 
         session = sessionRepository.save(session);
+
+        // Update Appointment Status to IN_PROGRESS
+        appointmentService.updateStatus(queueEntry.getAppointmentId(), AppointmentStatus.IN_PROGRESS);
 
         log.info("Video session created: sessionId={}, roomId={}", session.getId(), roomId);
 
@@ -324,11 +328,19 @@ public class VideoConsultationService {
      * Build session response DTO
      */
     private VideoSessionResponse buildSessionResponse(ConsultationSession session) {
+        UUID appointmentId = null;
+        if (session.getQueueEntryId() != null) {
+            appointmentId = queueEntryRepository.findById(session.getQueueEntryId())
+                    .map(QueueEntry::getAppointmentId)
+                    .orElse(null);
+        }
+
         return VideoSessionResponse.builder()
                 .sessionId(session.getId())
                 .roomId(session.getRoomId())
                 .queueEntryId(session.getQueueEntryId())
                 .consultationId(session.getConsultationId())
+                .appointmentId(appointmentId)
                 .status(session.getStatus())
                 .doctorId(session.getDoctorId())
                 .patientId(session.getPatientId())

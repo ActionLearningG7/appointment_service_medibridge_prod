@@ -116,4 +116,16 @@ public class Appointment extends BaseEntity {
      */
     @Column(name = "doctor_specialization", length = 100)
     private String doctorSpecialization;
+
+    /**
+     * Invoice ID (from Payment Service)
+     */
+    @Column(name = "invoice_id", length = 50)
+    private String invoiceId;
+
+    /**
+     * Payment Status (PENDING, PAID, FAILED)
+     */
+    @Column(name = "payment_status", length = 20)
+    private String paymentStatus;
 }
