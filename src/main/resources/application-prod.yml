@@ -1,16 +1,16 @@
 spring:
   # Database Configuration (Production)
   datasource:
-    url: jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: diFcUjHloMRrPoCGoCbkDpeevwIVtJjQ
+    url: jdbc:mysql://${DB_HOST:prod-db}:${DB_PORT:3306}/${DB_NAME:medibridge_appointments_prod}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:produser}
+    password: ${DB_PASSWORD:***CONFIGURE_ME***}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA Configuration (Production)
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: ${DDL_AUTO:validate}
+    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: false
@@ -19,11 +19,11 @@ spring:
   # Redis Configuration (Production)
   data:
     redis:
-      url: redis://default:GOwUPRpFGRVtZMSiEEWlTapCvefmpsFj@hopper.proxy.rlwy.net:11415
+      url: ${REDIS_URL:redis://prod-redis:6379}
 
   # Kafka Configuration (Production)
   kafka:
-    bootstrap-servers: shortline.proxy.rlwy.net:57987
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:prod-kafka:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -38,19 +38,37 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
 
+  # Mail Configuration (Production)
+  mail:
+    host: ${SMTP_HOST:mail-prod.internal}
+    port: ${SMTP_PORT:25}
+    username: ${SMTP_USER:***CONFIGURE_ME***}
+    password: ${SMTP_PASSWORD:***CONFIGURE_ME***}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+
+app:
+  mail:
+    from: ${MAIL_FROM:noreply@medibridge.com}
+
 # Logging (Production)
 logging:
   level:
-    root: WARN
+    root: ${LOG_LEVEL:WARN}
     com.medibridge: INFO
     org.springframework.data.redis: WARN
+
 eureka:
   client:
     service-url:
-      defaultZone: https://servermedibridgeprod-production.up.railway.app/eureka/
+      defaultZone: ${EUREKA_PROTOCOL:https}://${EUREKA_HOST:eureka-prod}:${EUREKA_PORT:443}/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:true}
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90

@@ -2,14 +2,49 @@ spring:
   application:
     name: appointment-service
   profiles:
-    active: dev
+    active: ${SPRING_PROFILE:dev}
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:medibridge_appointments}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Prakash@1}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Redis Configuration
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: ${spring.application.name}-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
 
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
   servlet:
     context-path: /api/v1
-
-
 
 # Actuator & Metrics
 management:
@@ -35,6 +70,18 @@ management:
     metrics:
       export:
         enabled: true
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_PROTOCOL:http}://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
 
 # Application-Specific Configuration (non-env dependent)
 appointment:
